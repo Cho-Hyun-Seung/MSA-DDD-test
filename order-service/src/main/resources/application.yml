@@ -34,8 +34,6 @@ spring:
       mode: never
 
 springdoc:
-  api-docs:
-    path: /order-api-docs
   swagger-ui:
     path: /order-docs
     operations-sorter: method
