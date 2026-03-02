@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: pg
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: ject
+      POSTGRES_PASSWORD: ject
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ject -d test_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  product-service:
+    build: ./server-a
+    container_name: product-service
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/test_db
+      DB_USERNAME: ject
+      DB_PASSWORD: ject
+    expose:
+      - "8080"
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/test_db
+      DB_USERNAME: ject
+      DB_PASSWORD: ject
+    expose:
+      - "8081"
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    depends_on:
+      - product-service
+      - order-service
+    ports:
+      - "80:80"
+
+volumes:
+  pg-data:
